@@ -24,4 +24,12 @@ Repo: https://github.com/asimkaya/speed-reading.git (branch: `main`)
 - Yeni bağımlılık eklemeden önce sor; POC'ta minimum bağımlılık.
 
 ## Komutlar
-Henüz yok. Stack seçilince buraya (çalıştırma, test) eklenecek.
+- `npm install` — bağımlılıkları kur (ilk seferde)
+- `npm run dev` — geliştirme sunucusu, http://localhost:5173 (telefondan denemek için: `npm run dev -- --host`, sonra bilgisayarın yerel IP'si:5173)
+- `npm test` — çekirdek modül testleri (Node'un yerleşik `node:test`'i, ek bağımlılık yok)
+- `npm run build` / `npm run preview` — üretim derlemesi ve önizleme
+
+## Kod yapısı
+- `src/core/` — framework'süz çekirdek: `tokenizer.js`, `orp.js`, `timing.js`, `stats.js`, `player.js` (saati dışarıdan verilebilen durum makinesi), `config.js` (tüm sabitler: WPM aralığı, duraklama ağırlıkları, kısaltmalar, işlev kelimeleri)
+- `src/` — React arayüzü: `App.jsx`, `components/` (WordDisplay, Controls, Summary, Menu), `usePlayer.js` (player ↔ React köprüsü)
+- `tests/` — çekirdek birim testleri + `content/` metinleri üzerinde entegrasyon testi

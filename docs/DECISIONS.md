@@ -16,6 +16,18 @@
 - 2026-09-26: Bağlam şeridi POC sonrasına ertelendi. Yumuşak başlangıç şimdilik yok (belki yeni sayfa/bölüme geçişte, sonra).
 - 2026-09-26: Tasarım/ritim/hız/bitiş özeti/tek elle kullanım kuralları `docs/DESIGN.md`'de toplandı. Oturum kullanıcı tarafından da bitirilebilir, metin de bitebilir; ikisinde de özet gösterilir.
 
+### POC uygulaması sırasında alınanlar (2026-09-26)
+- **Bağımlılıklar:** sadece `react`, `react-dom`, `vite`. `@vitejs/plugin-react` gerekmedi (Vite 8 JSX'i kendisi derliyor; bedeli: kod değişince sayfa tamamen yenilenir). Testler Node'un yerleşik `node:test`'i ile. Arayüz testleri Playwright ile repo dışından koşturuldu, repoya bağımlılık eklenmedi.
+- **Font:** web fontu yok; sistem serif yığını (Iowan Old Style / Palatino / Georgia / Noto Serif). Hepsi Türkçe karakterleri destekliyor.
+- **Odak noktası:** ORP harfi kelime alanı genişliğinin %35'inde sabit (kelime başa yakın odaklandığı için ortanın solunda). Kelime bu harfe göre konumlanır; ölçüm gerektirmeyen CSS düzeni, testte kayma 0 px. Sığmayan kelimede font küçülür, alt sınır yok (asla kesilmez).
+- **Duraklama ağırlıkları** (temel süreye eklenir, üst üste binmez, en güçlüsü geçerli): virgül +0,6 · `; :` +1,0 · cümle sonu +1,6 · paragraf +2,5 · sahne ayracı +4,0. İşlev kelimeleri ×0,8. 8 harfi geçen kelime harf başına +%5 (en fazla +%60). Replik başı +0,5. Hepsi `src/core/config.js`'te.
+- **Tokenizer:** kısaltma listesi `config.js`'te ("Bey." dahil değil — cümle sonunda da sık geçtiği için). Tek büyük harf + nokta ("M.") ve küçük harfle devam eden sıra sayısı ("3. sınıf") cümle sonu sayılmaz. Tire ve tek başına tırnak kelime olarak gösterilmez; tırnaklar kelimeye yapışık kalır. Boşluksuz yapışmış kelimeler ("gitti...Sonra", `dedi?"diye`) ayrılır. Wiki başlıkları (`==...==`) atlanır.
+- **Diyalog ipucu:** tırnak içi ve tireyle başlayan replik kelimeleri hafif italik + soğuk ton (ayarla kapatılabilir). Tireli replikte, cümle sonundan sonra küçük harfle başlayan kelime ("dedi.") anlatıya döner.
+- **İstatistik:** "okunan kelime" = ekranda gerçekten gösterilmiş farklı kelimeler (geri sarıp tekrar okunan bir kez sayılır). İlerleme = ulaşılan en ileri konum. Süre = sadece oynarken geçen süre. Sekme arka plana geçince okuma otomatik duraklar.
+- **Geri sar:** mevcut cümlenin başına; cümlenin ilk 2 kelimesindeyken bir önceki cümlenin başına. İlerleme çubuğuna dokununca o noktadaki cümlenin başına atlar.
+- **Kendi metnini yapıştır** seçeneği eklendi (düz metin; kaydedilmez, sayfa yenilenince gider). Hız ve ayarlar tarayıcıda (localStorage) saklanır.
+
 ## Açık sorular
 - Uzun vade: ürün modeli (ücretsiz/abonelik), mobil için React Native mi PWA mı? (POC sonrası)
-- Türkçe tokenizer: kısaltma listesi ("Dr.", "vb.", "vs.", "Bey.") ve tırnak/tire (—) davranışı POC sırasında netleşecek.
+- **Hız ayarı nominal mi olsun, ortalama mı?** Şu an "300 kelime/dk" düz bir kelimenin süresini belirler; noktalama duraklamaları eklendiği için ölçülen ortalama hız daha düşük çıkar (Kürk Mantolu Madonna'da ~%15, 300 → ~255). Özette bu açıklanıyor. Alternatif: süreleri metnin ortalamasına göre ölçekleyip ayarlanan hız = gerçek ortalama hız yapmak. POC denemesinden sonra karar verilecek.
+- Duraklama ağırlıkları gerçek kullanımda doğal hissettiriyor mu? (Aşama 6 değerlendirmesi)
