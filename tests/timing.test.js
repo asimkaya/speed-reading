@@ -80,3 +80,10 @@ test('higher speed means shorter duration', () => {
   const t = tok('kalem,', { punctuation: 'comma' });
   assert.ok(wordDuration(t, 600) < wordDuration(t, 300));
 });
+
+test('soft start factor ramps linearly down to 1', async () => {
+  const { softStartFactor } = await import('../src/core/timing.js');
+  const cfg = { words: 4, extra: 1 };
+  assert.deepEqual([0, 1, 2, 3, 4, 10].map((k) => softStartFactor(k, cfg)), [2, 1.75, 1.5, 1.25, 1, 1]);
+  assert.equal(softStartFactor(0, { words: 0, extra: 1 }), 1);
+});

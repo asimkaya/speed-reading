@@ -245,3 +245,78 @@ test('measured average WPM is close to the setting for plain words', () => {
   // Only the final paragraph pause slows the pace down slightly.
   assert.ok(Math.abs(stats.avgWpm - 300) <= 3, `avg ${stats.avgWpm}`);
 });
+
+test('starts at a saved position without counting it as read', () => {
+  const clock = fakeClock();
+  const player = createPlayer(PLAIN, { wpm: 300, clock, startIndex: 3 });
+  assert.equal(player.getState().status, 'idle');
+  assert.equal(player.getState().index, 3);
+  player.play();
+  assert.equal(player.getState().index, 3);
+  clock.tick(5000);
+  const stats = player.getStats();
+  assert.equal(stats.wordsRead, 2);
+  assert.equal(stats.completed, true);
+});
+
+test('invalid saved positions are clamped', () => {
+  assert.equal(createPlayer(PLAIN, { startIndex: 99 }).getState().index, 4);
+  assert.equal(createPlayer(PLAIN, { startIndex: -5 }).getState().index, 0);
+  assert.equal(createPlayer(PLAIN, { startIndex: 'x' }).getState().index, 0);
+  assert.equal(createPlayer([], { startIndex: 3 }).getState().index, 0);
+});
+
+test('restart goes back to the very beginning even after a saved start', () => {
+  const player = createPlayer(PLAIN, { startIndex: 3, clock: fakeClock() });
+  player.restart();
+  assert.equal(player.getState().index, 0);
+});
+
+test('soft start: first words are slower, then full speed', () => {
+  const words = Array.from({ length: 20 }, () => 'kalem').join(' ');
+  const clock = fakeClock();
+  const player = createPlayer(tokenize(words), { wpm: 300, clock, softStart: true });
+  const times = [];
+  let last = 0;
+  player.subscribe((s) => {
+    if (s.status === 'playing') {
+      times.push(clock.now() - last);
+      last = clock.now();
+    }
+  });
+  player.play();
+  clock.tick(60000);
+  const durations = times.slice(1);
+  assert.equal(durations[0], 400, 'first word shown twice as long');
+  for (let k = 1; k < 8; k++) assert.ok(durations[k] < durations[k - 1], `word ${k} faster than ${k - 1}`);
+  assert.equal(durations[8], 200, 'full speed after the ramp');
+  assert.equal(durations[12], 200);
+});
+
+test('soft start restarts after pause and after a jump', () => {
+  const words = Array.from({ length: 30 }, () => 'kalem').join(' ');
+  const clock = fakeClock();
+  const player = createPlayer(tokenize(words), { wpm: 300, clock, softStart: true });
+  player.play();
+  clock.tick(3000);
+  const i = player.getState().index;
+  assert.equal(player.getState().status, 'playing');
+  player.pause();
+  player.play();
+  clock.tick(399);
+  assert.equal(player.getState().index, i, 'resumed word is held longer');
+  clock.tick(1);
+  assert.equal(player.getState().index, i + 1);
+  player.seek(2);
+  clock.tick(399);
+  assert.equal(player.getState().index, 2, 'jump also eases in');
+});
+
+test('soft start can be switched off at runtime', () => {
+  const clock = fakeClock();
+  const player = createPlayer(PLAIN, { wpm: 300, clock, softStart: true });
+  player.setSoftStart(false);
+  player.play();
+  clock.tick(200);
+  assert.equal(player.getState().index, 1);
+});

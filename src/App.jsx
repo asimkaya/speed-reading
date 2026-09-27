@@ -6,11 +6,13 @@ import { WPM_STEP } from './core/config.js';
 import { TEXTS, CUSTOM_TEXT_ID, DEFAULT_TEXT_ID } from './texts.js';
 import { loadSettings, saveSettings } from './settings.js';
 import { usePlayer } from './usePlayer.js';
-import { formatInt, formatMinutes, formatPages } from './format.js';
+import { loadPosition, savePosition } from './positions.js';
+import { formatInt, formatMinutes, formatPages, formatPercent } from './format.js';
 import { WordDisplay } from './components/WordDisplay.jsx';
 import { Controls } from './components/Controls.jsx';
 import { Summary } from './components/Summary.jsx';
 import { Menu } from './components/Menu.jsx';
+import { PauseContext } from './components/PauseContext.jsx';
 
 const WORD_COUNTS = Object.fromEntries(TEXTS.map((t) => [t.id, tokenize(t.body).length]));
 
@@ -29,7 +31,11 @@ export function App() {
   );
   const tokens = useMemo(() => tokenize(text.body), [text.body]);
   const units = useMemo(() => remainingUnits(tokens), [tokens]);
-  const { player, state } = usePlayer(tokens, settings.wpm);
+  const startIndex = useMemo(
+    () => (textId === CUSTOM_TEXT_ID ? 0 : sentenceStart(tokens, loadPosition(textId, tokens.length))),
+    [tokens, textId],
+  );
+  const { player, state } = usePlayer(tokens, { wpm: settings.wpm, startIndex, softStart: settings.softStart });
 
   const updateSetting = useCallback((key, value) => setSettings((s) => ({ ...s, [key]: value })), []);
 
@@ -40,6 +46,12 @@ export function App() {
   useEffect(() => {
     if (state && state.wpm !== settings.wpm) updateSetting('wpm', state.wpm);
   }, [state, settings.wpm, updateSetting]);
+
+  useEffect(() => {
+    if (!state || textId === CUSTOM_TEXT_ID || state.total !== tokens.length) return;
+    const finishedText = state.status === 'finished' && state.endReason === 'end';
+    savePosition(textId, finishedText ? 0 : state.index, state.total);
+  }, [state, textId, tokens.length]);
 
   const status = state?.status ?? 'idle';
   const canFinish = status === 'playing' || status === 'paused';
@@ -90,9 +102,10 @@ export function App() {
   const total = tokens.length;
   const empty = total === 0;
   const idle = status === 'idle';
-  const shownIndex = idle ? -1 : state.index;
-  const progress = total ? (shownIndex + 1) / total : 0;
-  const remainingMs = baseDuration(state.wpm) * (units[Math.max(shownIndex, 0)] ?? 0);
+  const resumable = idle && state.index > 0;
+  const position = idle ? state.index : state.index + 1;
+  const progress = total ? position / total : 0;
+  const remainingMs = baseDuration(state.wpm) * (units[state.index] ?? 0);
 
   const selectText = (id) => {
     player.pause();
@@ -130,7 +143,11 @@ export function App() {
         </button>
       </header>
 
-      <main className="stage" onClick={() => !empty && player.toggle()} data-testid="stage">
+      <main
+        className={`stage${!empty && !idle ? ' stage--reading' : ''}`}
+        onClick={() => !empty && player.toggle()}
+        data-testid="stage"
+      >
         {empty ? (
           <div className="start">
             <p>Bu metinde okunacak kelime yok.</p>
@@ -141,16 +158,41 @@ export function App() {
             <h1>{text.title}</h1>
             {text.subtitle && <p className="start__sub">{text.subtitle}</p>}
             <p className="start__meta">
-              {formatInt(total)} kelime · ~{formatPages(total)} sayfa · {formatMinutes(remainingMs)}
+              {formatInt(total)} kelime · ~{formatPages(total)} sayfa ·{' '}
+              {formatMinutes(baseDuration(state.wpm) * units[0])}
             </p>
-            <p className="start__hint">Başlamak için dokun</p>
+            {resumable ? (
+              <>
+                <p className="start__hint" data-testid="resume-hint">
+                  Kaldığın yerden devam etmek için dokun ({formatPercent(progress)})
+                </p>
+                <button
+                  type="button"
+                  className="btn btn--ghost start__restart"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    player.restart();
+                  }}
+                >
+                  Baştan başla
+                </button>
+              </>
+            ) : (
+              <p className="start__hint">Başlamak için dokun</p>
+            )}
           </div>
         ) : (
           <>
+            <div />
             <WordDisplay token={state.token} orp={settings.orp} dialogueCue={settings.dialogueCue} />
-            <p className="stage__hint" aria-hidden={status !== 'paused'}>
-              {status === 'paused' ? 'Duraklatıldı · devam için dokun' : ' '}
-            </p>
+            <div className="stage__below">
+              {status === 'paused' && (
+                <>
+                  <p className="stage__hint">Duraklatıldı · kelimeye dokunarak oraya atla</p>
+                  <PauseContext tokens={tokens} index={state.index} onSeek={(i) => player.seek(i)} />
+                </>
+              )}
+            </div>
           </>
         )}
       </main>
@@ -170,7 +212,7 @@ export function App() {
         </div>
         <div className="meta" data-testid="meta">
           <span>
-            {formatInt(Math.max(shownIndex + 1, 0))} / {formatInt(total)}
+            {formatInt(position)} / {formatInt(total)}
           </span>
           <span>{empty ? '' : `${formatMinutes(remainingMs)} kaldı`}</span>
         </div>

@@ -1,6 +1,6 @@
 import { WPM_DEFAULT } from './config.js';
 import { createStatsTracker, summarize } from './stats.js';
-import { clampWpm, wordDuration } from './timing.js';
+import { clampWpm, softStartFactor, wordDuration } from './timing.js';
 
 const defaultClock = {
   now: () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
@@ -30,14 +30,25 @@ export function rewindTarget(tokens, index, grace = 2) {
  * Framework-free RSVP player: idle → playing ⇄ paused → finished.
  * The clock is injectable so the state machine can be tested without real time.
  */
-export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock } = {}) {
+export function createPlayer(
+  tokens,
+  { wpm = WPM_DEFAULT, clock = defaultClock, startIndex = 0, softStart = false } = {},
+) {
   const stats = createStatsTracker(tokens.length);
   const listeners = new Set();
   let status = 'idle';
-  let index = 0;
+  let index = clampIndex(startIndex);
   let speed = clampWpm(wpm);
   let endReason = null;
   let timer = null;
+  let ease = softStart;
+  let sinceStart = 0;
+
+  function clampIndex(i) {
+    if (tokens.length === 0) return 0;
+    const n = Math.round(Number(i));
+    return Number.isFinite(n) ? Math.min(Math.max(n, 0), tokens.length - 1) : 0;
+  }
 
   const emit = () => {
     const s = getState();
@@ -55,7 +66,9 @@ export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock }
     index = i;
     stats.markShown(i);
     emit();
-    timer = clock.setTimeout(advance, wordDuration(tokens[i], speed));
+    const factor = ease ? softStartFactor(sinceStart) : 1;
+    sinceStart++;
+    timer = clock.setTimeout(advance, wordDuration(tokens[i], speed) * factor);
   };
 
   function advance() {
@@ -82,6 +95,7 @@ export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock }
     }
     status = 'playing';
     endReason = null;
+    sinceStart = 0;
     stats.start(clock.now());
     show(index);
   }
@@ -101,9 +115,10 @@ export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock }
 
   function seek(i) {
     if (tokens.length === 0 || status === 'finished') return;
-    const target = Math.min(Math.max(Math.round(i), 0), tokens.length - 1);
+    const target = clampIndex(i);
     if (status === 'playing') {
       cancel();
+      sinceStart = 0;
       show(target);
     } else {
       index = target;
@@ -113,6 +128,10 @@ export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock }
 
   function rewind() {
     seek(rewindTarget(tokens, index));
+  }
+
+  function setSoftStart(on) {
+    ease = !!on;
   }
 
   function setWpm(value) {
@@ -153,6 +172,7 @@ export function createPlayer(tokens, { wpm = WPM_DEFAULT, clock = defaultClock }
     seek,
     rewind,
     setWpm,
+    setSoftStart,
     finish,
     restart,
     resume,

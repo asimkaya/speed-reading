@@ -72,6 +72,17 @@ export function Menu({ currentId, wordCounts, customText, settings, onSelect, on
             <small>Tırnak içindeki ve tireyle başlayan replikler hafif italik görünür.</small>
           </span>
         </label>
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={settings.softStart}
+            onChange={(e) => onSetting('softStart', e.target.checked)}
+          />
+          <span>
+            Yumuşak başlangıç
+            <small>Başlatınca, devam edince ya da atlayınca ilk birkaç kelime yavaş gelir, sonra hız yükselir.</small>
+          </span>
+        </label>
         <p className="sheet__keys">
           Klavye: <kbd>Boşluk</kbd> duraklat/devam · <kbd>←</kbd> cümle başı · <kbd>↑</kbd>/<kbd>↓</kbd> hız ·{' '}
           <kbd>Esc</kbd> bitir

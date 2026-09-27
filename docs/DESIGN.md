@@ -55,7 +55,11 @@ Not: Anlama ölçülmez; özette anlamaya dair hiçbir iddia yok. "Kesin X kat h
 - Yatay taşma yok; ≥360px genişlikte çalışır. Güvenli alanlara (çentik, alt çubuk) saygı.
 - Masaüstünde klavye: Boşluk = duraklat/devam, ← = geri sar, ↑/↓ = hız, Esc = bitir.
 
-## 6. Ertelenenler (POC'ta YOK)
-- **Yumuşak başlangıç** (hız yükselmesi, "3-2-1"): şimdilik yok. Fikir: yeni sayfaya/bölüme geçişte uygulanabilir. Kenara konuldu.
-- **Bağlam şeridi** (mevcut cümleyi soluk gösterme): POC sonrası.
+## 6. Sonradan eklenenler (2026-09-27)
+- **Yumuşak başlangıç:** Oynat, devam ve atlama (geri sar, ilerleme çubuğu, bağlamdan kelime seçme) sonrası ilk 8 kelime daha uzun gösterilir; ilk kelime 2× süre, sonra doğrusal olarak normal hıza iner. Geri sayım ("3-2-1") yok. Ayarlardan kapatılabilir, varsayılan açık.
+- **Duraklatınca bağlam:** Duraklatınca kelimenin altında önceki ve mevcut cümle soluk renkte görünür, mevcut kelimenin altı çizilidir (en fazla 40 kelime). Bir kelimeye dokununca oraya atlanır (duraklatılmış kalır). Kelimenin yeri bağlam görününce **değişmez** (ayrı grid satırında). Oynarken gösterilmez.
+- **Kaldığın yer:** Hazır metinlerde konum tarayıcıda metin bazında saklanır; açılışta kaydedilen konumun cümle başından devam edilir. Başlangıç kartında "Kaldığın yerden devam (%X)" ve "Baştan başla". Metin sonuna kadar okununca konum sıfırlanır. Yapıştırılan metinde saklanmaz.
+
+## 7. Ertelenenler
+- **Oynarken bağlam şeridi** (okurken de cümlenin soluk görünmesi): duraklatınca bağlam yeterli mi, değerlendirmeden sonra.
 - Açık tema, font seçimi, otomatik hız önerisi.

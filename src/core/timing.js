@@ -1,4 +1,4 @@
-import { FUNCTION_WORDS, PAUSES, TIMING, WPM_MAX, WPM_MIN } from './config.js';
+import { FUNCTION_WORDS, PAUSES, SOFT_START, TIMING, WPM_MAX, WPM_MIN } from './config.js';
 import { letterCount } from './orp.js';
 
 export function clampWpm(wpm) {
@@ -47,6 +47,12 @@ export function remainingUnits(tokens) {
   const suffix = new Float64Array(tokens.length + 1);
   for (let i = tokens.length - 1; i >= 0; i--) suffix[i] = suffix[i + 1] + durationUnits(tokens[i]);
   return suffix;
+}
+
+/** Duration multiplier for the k-th word (0-based) after playback (re)starts. */
+export function softStartFactor(k, softStart = SOFT_START) {
+  if (k >= softStart.words || softStart.words <= 0) return 1;
+  return 1 + softStart.extra * (1 - k / softStart.words);
 }
 
 export function estimateDuration(tokens, wpm, from = 0) {

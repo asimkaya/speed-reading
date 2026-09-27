@@ -23,6 +23,19 @@ export const TIMING = {
   dialogueStartBonus: 0.5,
 };
 
+// Soft start: after play/resume/jump the first words stay longer and ease into full speed.
+// The first word gets (1 + extra) × its normal time, falling linearly to 1× over `words`.
+export const SOFT_START = {
+  words: 8,
+  extra: 1.0,
+};
+
+// Context shown while paused: previous + current sentence, capped in length.
+export const CONTEXT = {
+  maxWords: 40,
+  maxBefore: 20,
+};
+
 export const FUNCTION_WORDS = new Set([
   've', 'bir', 'da', 'de', 'ki', 'bu', 'şu', 'o', 'ile', 'mi', 'mı', 'mu', 'mü',
   'ya', 'ne', 'en', 'çok', 'gibi', 'için', 'ama',

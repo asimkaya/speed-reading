@@ -6,5 +6,6 @@
 - [x] Aşama 3: Çekirdek modüller + testler (tokenizer, timing, orp, stats)
 - [x] Aşama 4: Player ve UI
 - [x] Aşama 5: Oturum istatistiği, mobil uyum, cilalama
+- [x] Aşama 5b: Duraklatınca bağlam, kaldığın yeri hatırlama, yumuşak başlangıç, GitHub Pages yayını
 - [ ] Aşama 6: POC değerlendirmesi — kullanıcı farklı hızlarda okuyup duraklama/ritim ayarlarını gözden geçirir (bkz. DECISIONS.md açık sorular)
 - [ ] Sonra: EPUB/PDF, anlama testleri, mobil uygulama, hesaplar

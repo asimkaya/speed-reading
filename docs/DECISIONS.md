@@ -27,6 +27,11 @@
 - **Geri sar:** mevcut cümlenin başına; cümlenin ilk 2 kelimesindeyken bir önceki cümlenin başına. İlerleme çubuğuna dokununca o noktadaki cümlenin başına atlar.
 - **Kendi metnini yapıştır** seçeneği eklendi (düz metin; kaydedilmez, sayfa yenilenince gider). Hız ve ayarlar tarayıcıda (localStorage) saklanır.
 
+### 2026-09-27
+- **Duraklatınca bağlam, kaldığın yer, yumuşak başlangıç** eklendi (ayrıntılar DESIGN.md §6). Değerler `src/core/config.js`'te: `SOFT_START = { words: 8, extra: 1.0 }`, `CONTEXT = { maxWords: 40, maxBefore: 20 }`.
+- Kayıtlı konum, metnin kelime sayısı değişmişse yok sayılır (metin güncellenirse yanlış yere atlamasın diye).
+- **Yayın: GitHub Pages.** `main`'e her push'ta GitHub Actions testleri çalıştırır, derler ve yayınlar (`.github/workflows/deploy.yml`). Vite `base: './'` ile göreli yollar kullanır. Adres: https://asimkaya.github.io/speed-reading/ (repo ayarlarında Pages kaynağı "GitHub Actions" olmalı).
+
 ## Açık sorular
 - Uzun vade: ürün modeli (ücretsiz/abonelik), mobil için React Native mi PWA mı? (POC sonrası)
 - **Hız ayarı nominal mi olsun, ortalama mı?** Şu an "300 kelime/dk" düz bir kelimenin süresini belirler; noktalama duraklamaları eklendiği için ölçülen ortalama hız daha düşük çıkar (Kürk Mantolu Madonna'da ~%15, 300 → ~255). Özette bu açıklanıyor. Alternatif: süreleri metnin ortalamasına göre ölçekleyip ayarlanan hız = gerçek ortalama hız yapmak. POC denemesinden sonra karar verilecek.

@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS = {
   wpm: WPM_DEFAULT,
   orp: true,
   dialogueCue: true,
+  softStart: true,
   textId: DEFAULT_TEXT_ID,
 };
 
